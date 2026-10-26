@@ -178,19 +178,11 @@ private fun DashboardTopBar(
         verticalAlignment = Alignment.Top
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "余生",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(Modifier.size(Spacing.sm))
-                Pill(
-                    text = "LIFE REMAINING",
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text(
+                text = "余生",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
             Spacer(Modifier.height(Spacing.sm))
             Text(
                 text = "${Format.longDate(today)} · ${greeting(LocalTime.now())}",
