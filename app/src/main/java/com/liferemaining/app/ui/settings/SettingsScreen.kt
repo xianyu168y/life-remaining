@@ -239,12 +239,18 @@ fun SettingsScreen(
                         }
                     }
                     RowDivider()
+                    val supportsDynamicColor = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
                     ListRow(
                         title = "动态颜色",
-                        subtitle = "Android 12+ 跟随壁纸取色",
+                        subtitle = if (supportsDynamicColor) {
+                            "Android 12+ 跟随壁纸取色"
+                        } else {
+                            "当前系统版本不支持（需要 Android 12+）"
+                        },
                         trailing = {
                             Switch(
-                                checked = profile.dynamicColor,
+                                checked = profile.dynamicColor && supportsDynamicColor,
+                                enabled = supportsDynamicColor,
                                 onCheckedChange = onDynamicColorChange
                             )
                         }

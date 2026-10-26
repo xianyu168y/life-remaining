@@ -128,7 +128,8 @@ fun DashboardContent(
             CountdownCard(
                 state = state,
                 onConfigure = onOpenProfileSetup,
-                onOpenSettings = onOpenSettings
+                onOpenSettings = onOpenSettings,
+                onOpenDetails = onOpenProfileSetup
             )
 
             if (state.profile.hasBirthDate) {
@@ -225,11 +226,14 @@ private fun greeting(time: LocalTime): String = when (time.hour) {
 private fun CountdownCard(
     state: DashboardUiState,
     onConfigure: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onOpenDetails: () -> Unit
 ) {
     LifeCard(
         modifier = Modifier.fillMaxWidth(),
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surface,
+        // 需求：点击生命主卡片进入生命参数详情。
+        onClick = if (state.cardState == CountdownCardState.NOT_CONFIGURED) onConfigure else onOpenDetails
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(

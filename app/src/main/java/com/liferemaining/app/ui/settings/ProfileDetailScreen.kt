@@ -123,7 +123,8 @@ fun ProfileDetailScreen(
                 label = "选择出生日期",
                 value = profile.birthDate,
                 onChange = onBirthDateChange,
-                selectableRange = LocalDate.of(1900, 1, 1)..today
+                selectableRange = LocalDate.of(1900, 1, 1)..today,
+                initialDate = LocalDate.of(1990, 1, 1)
             )
         }
 

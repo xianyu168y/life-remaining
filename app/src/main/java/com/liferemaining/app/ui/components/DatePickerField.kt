@@ -42,7 +42,8 @@ fun DatePickerField(
     onChange: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String = "选择日期",
-    selectableRange: ClosedRange<LocalDate>? = null
+    selectableRange: ClosedRange<LocalDate>? = null,
+    initialDate: LocalDate? = null
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
@@ -82,9 +83,10 @@ fun DatePickerField(
     }
 
     if (showDialog) {
-        val initialMillis = (value ?: selectableRange?.let { range ->
+        val fallback = initialDate ?: selectableRange?.let { range ->
             if (range.endInclusive.isBefore(LocalDate.now())) range.endInclusive else LocalDate.now()
-        } ?: LocalDate.now())
+        } ?: LocalDate.now()
+        val initialMillis = (value ?: fallback)
             .atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
         val pickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
         DatePickerDialog(

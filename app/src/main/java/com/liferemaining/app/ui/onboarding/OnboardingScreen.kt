@@ -231,7 +231,8 @@ private fun BirthDateStep(
             label = "出生日期",
             value = birthDate,
             onChange = onChange,
-            selectableRange = earliest..today
+            selectableRange = earliest..today,
+            initialDate = LocalDate.of(1990, 1, 1)
         )
         if (birthDate != null) {
             Spacer(Modifier.height(Spacing.md))
