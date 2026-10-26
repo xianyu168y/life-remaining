@@ -186,18 +186,18 @@ class ScreenshotTest {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val candidates = listOf(instrumentation.targetContext, instrumentation.context)
         for (ctx in candidates) {
-            runCatching {
-                val dir = File(ctx.filesDir, "screenshots")
-                if (!dir.exists() && !dir.mkdirs()) {
-                    android.util.Log.w("ScreenshotTest", "mkdirs failed: $dir")
-                    continue
+            val dir = File(ctx.filesDir, "screenshots")
+            if (!dir.exists() && !dir.mkdirs()) {
+                android.util.Log.w("ScreenshotTest", "mkdirs failed: $dir")
+            } else {
+                runCatching {
+                    FileOutputStream(File(dir, name)).use { out ->
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                    }
+                    android.util.Log.i("ScreenshotTest", "saved $dir/$name")
+                }.onFailure {
+                    android.util.Log.w("ScreenshotTest", "save failed at ${ctx.packageName}", it)
                 }
-                FileOutputStream(File(dir, name)).use { out ->
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-                }
-                android.util.Log.i("ScreenshotTest", "saved $dir/$name")
-            }.onFailure {
-                android.util.Log.w("ScreenshotTest", "save failed at ${ctx.packageName}", it)
             }
         }
     }
