@@ -6,51 +6,83 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.runner.Description
 import org.junit.runner.RunWith
+import org.junit.runners.model.Statement
+import java.time.LocalDate
 
 /**
  * 端到端导航测试。
  *
- * 起点（Onboarding 还是首页）由 MainActivity 启动时读取的 instrumentation
- * argument `-e app_test_start` 决定：ONBOARDING 强制首次配置页；DASHBOARD 强制首页。
- * 与 DataStore 状态解耦，并发用例互不影响，也不依赖 JUnit 方法顺序。
+ * 起点（Onboarding 还是首页）由启动瞬间的偏好决定，而 Compose 规则会先启动 Activity、
+ * 再进入测试体。因此每个用例都自己写入或清空偏好，然后 recreate Activity，
+ * 不依赖 JUnit 方法顺序（此前验证过此方案稳定通过）。
  */
 @RunWith(AndroidJUnit4::class)
 class NavigationUiTest {
 
+    private val composeRule = createAndroidComposeRule<MainActivity>()
+
+    /** 在 Activity 启动前（@Before 之前）决定数据形态。 */
+    private val seed = TestRule { base: Statement, _: Description ->
+        object : Statement() {
+            override fun evaluate() {
+                val app = composeRule.activity.application as LifeRemainingApplication
+                runBlocking {
+                    app.container.clearEverything()
+                    if (seedProfile) {
+                        app.container.profileStore.setBirthDate(LocalDate.of(1990, 5, 15))
+                        app.container.profileStore.setLifespan(80)
+                        app.container.profileStore.setOnboardingCompleted(true)
+                    }
+                }
+                base.evaluate()
+            }
+        }
+    }
+
     @get:Rule
-    val rule = createAndroidComposeRule<MainActivity>()
+    val chain: RuleChain = RuleChain.outerRule(seed).around(composeRule)
+
+    private var seedProfile = false
+
+    private fun waitFor(text: String) {
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
 
     @Test
-    fun onboardingEntryShowsWelcome() {
-        rule.waitUntil(timeoutMillis = 10_000) {
-            rule.onAllNodes(hasText("了解时间，\n让每一天更有意义。"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
-        rule.onNodeWithText("了解时间，\n让每一天更有意义。").assertIsDisplayed()
-        rule.onNodeWithText("继续").performClick()
-        rule.onNodeWithText("你的出生日期").assertIsDisplayed()
+    fun firstLaunchShowsOnboarding() {
+        // seedProfile = false：数据为空，启动即 Onboarding。
+        composeRule.activityRule.scenario.recreate()
+        waitFor("了解时间，\n让每一天更有意义。")
+        composeRule.onNodeWithText("了解时间，\n让每一天更有意义。").assertIsDisplayed()
+        composeRule.onNodeWithText("继续").performClick()
+        composeRule.onNodeWithText("你的出生日期").assertIsDisplayed()
     }
 
     @Test
     fun bottomNavigationSwitchesBetweenTabs() {
-        rule.waitUntil(timeoutMillis = 10_000) {
-            rule.onAllNodes(hasText("LIFE REMAINING"))
-                .fetchSemanticsNodes().isNotEmpty()
-        }
+        seedProfile = true
+        composeRule.activityRule.scenario.recreate()
+        waitFor("LIFE REMAINING")
 
-        rule.onNodeWithText("时间轴").performClick()
-        rule.onNodeWithText("人生时间轴").assertIsDisplayed()
+        composeRule.onNodeWithText("时间轴").performClick()
+        composeRule.onNodeWithText("人生时间轴").assertIsDisplayed()
 
-        rule.onNodeWithText("目标").performClick()
-        rule.onNodeWithText("目标与愿望").assertIsDisplayed()
+        composeRule.onNodeWithText("目标").performClick()
+        composeRule.onNodeWithText("目标与愿望").assertIsDisplayed()
 
-        rule.onNodeWithText("设置").performClick()
-        rule.onNodeWithText("生命参数").assertIsDisplayed()
+        composeRule.onNodeWithText("设置").performClick()
+        composeRule.onNodeWithText("生命参数").assertIsDisplayed()
 
-        rule.onNodeWithText("首页").performClick()
-        rule.onNodeWithText("LIFE REMAINING").assertIsDisplayed()
+        composeRule.onNodeWithText("首页").performClick()
+        composeRule.onNodeWithText("LIFE REMAINING").assertIsDisplayed()
     }
 }
