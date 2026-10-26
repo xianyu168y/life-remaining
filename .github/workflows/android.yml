@@ -115,9 +115,7 @@ jobs:
           profile: pixel_5
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: |
-            ./gradlew --no-daemon connectedDebugAndroidTest
-            sh scripts/pull-screenshots.sh
+          script: ./gradlew --no-daemon connectedDebugAndroidTest
 
       - name: Upload instrumented test report
         if: always()
@@ -127,12 +125,3 @@ jobs:
           path: app/build/reports/androidTests/connected
           if-no-files-found: warn
           retention-days: 14
-
-      - name: Upload screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: device-screenshots
-          path: screenshots
-          if-no-files-found: warn
-          retention-days: 30

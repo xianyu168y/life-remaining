@@ -1,6 +1,5 @@
 package com.liferemaining.app
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
@@ -8,9 +7,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import com.liferemaining.app.domain.calculator.LifeCountdownCalculator
 import com.liferemaining.app.domain.calculator.TimeProgressCalculator
 import com.liferemaining.app.domain.model.AccentKey
@@ -29,19 +26,16 @@ import com.liferemaining.app.ui.theme.LifeRemainingTheme
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.File
-import java.io.FileOutputStream
 import java.time.LocalDate
 
 /**
- * 在真实设备/模拟器上渲染首页并导出 PNG。
+ * 在真实设备/模拟器上渲染首页并验证能成功产生画面。
  *
- * 这不是断言型测试：它的价值是把「真机渲染结果」留成构建产物，
- * 便于在无法直接看设备屏幕的环境里核对排版。
- * CI 会在 connectedDebugAndroidTest 之后 adb pull 这些文件并上传 artifact。
+ * 只断言「captureToImage 返回非空位图」，不做像素比较（不同 AVD 字体渲染有差异）。
+ * 它覆盖 Compose 在真机上的实际绘制路径，能抓到纯 JVM 测试发现不了的问题。
  */
 @RunWith(AndroidJUnit4::class)
-class ScreenshotTest {
+class RenderSmokeTest {
 
     @get:Rule
     val rule = createComposeRule()
@@ -104,22 +98,16 @@ class ScreenshotTest {
     }
 
     @Test
-    fun captureHomeVariants() {
-        capture(ThemeMode.DARK, AccentKey.TEAL, "home_dark_teal.png")
-    }
+    fun rendersDarkHome() = render(ThemeMode.DARK, AccentKey.TEAL)
 
     @Test
-    fun captureLightHome() {
-        capture(ThemeMode.LIGHT, AccentKey.TEAL, "home_light_teal.png")
-    }
+    fun rendersLightHome() = render(ThemeMode.LIGHT, AccentKey.TEAL)
 
     @Test
-    fun captureLightMoss() {
-        capture(ThemeMode.LIGHT, AccentKey.MOSS, "home_light_moss.png")
-    }
+    fun rendersLightMoss() = render(ThemeMode.LIGHT, AccentKey.MOSS)
 
     @Test
-    fun captureEmptyState() {
+    fun rendersEmptyState() {
         val empty = UserProfile(onboardingCompleted = true)
         val countdown = LifeCountdownCalculator.calculate(null, today, null)
         val state = DashboardUiState(
@@ -151,10 +139,10 @@ class ScreenshotTest {
                 }
             }
         }
-        save("home_empty_state.png")
+        assertRendered()
     }
 
-    private fun capture(theme: ThemeMode, accent: AccentKey, name: String) {
+    private fun render(theme: ThemeMode, accent: AccentKey) {
         val uiState = state()
         rule.setContent {
             LifeRemainingTheme(themeMode = theme, accentKey = accent) {
@@ -175,30 +163,13 @@ class ScreenshotTest {
                 }
             }
         }
-        save(name)
+        assertRendered()
     }
 
-    private fun save(name: String) {
+    private fun assertRendered() {
         rule.waitForIdle()
         val bitmap = rule.onRoot().captureToImage().asAndroidBitmap()
-        // 同时写到目标 App 与测试 APK 的私有目录，CI 用 `run-as` 两个包都尝试拉取。
-        // 不写 /sdcard/Android/data：Android 11+ 的 scoped storage 会让 adb 读不到。
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val candidates = listOf(instrumentation.targetContext, instrumentation.context)
-        for (ctx in candidates) {
-            val dir = File(ctx.filesDir, "screenshots")
-            if (!dir.exists() && !dir.mkdirs()) {
-                android.util.Log.w("ScreenshotTest", "mkdirs failed: $dir")
-            } else {
-                runCatching {
-                    FileOutputStream(File(dir, name)).use { out ->
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-                    }
-                    android.util.Log.i("ScreenshotTest", "saved $dir/$name")
-                }.onFailure {
-                    android.util.Log.w("ScreenshotTest", "save failed at ${ctx.packageName}", it)
-                }
-            }
-        }
+        org.junit.Assert.assertTrue("render width > 0", bitmap.width > 0)
+        org.junit.Assert.assertTrue("render height > 0", bitmap.height > 0)
     }
 }
