@@ -80,7 +80,9 @@ fun LifeRemainingRoot(container: AppContainer) {
         val navController = rememberNavController()
         // 只在首次进入时决定起点：若跟随 profile 变化，NavHost 会重建图并打断当前导航。
         val startDestination = remember {
-            if (profile.onboardingCompleted) Routes.DASHBOARD else Routes.ONBOARDING
+            // 测试可用 -e app_test_start 强制起点，避免并发用例受 DataStore 相互影响。
+            TestFlags.startDestinationOverride
+                ?: if (profile.onboardingCompleted) Routes.DASHBOARD else Routes.ONBOARDING
         }
 
         val notificationPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
