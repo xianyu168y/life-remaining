@@ -116,8 +116,8 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
-            ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.app_test_start=ONBOARDING
-            ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.app_test_start=DASHBOARD -Pandroid.testInstrumentationRunnerArguments.class=com.liferemaining.app.NavigationUiTest
+            ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.app_test_start=DASHBOARD
+            ./gradlew --no-daemon connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.app_test_start=ONBOARDING -Pandroid.testInstrumentationRunnerArguments.class=com.liferemaining.app.NavigationUiTest#onboardingEntryShowsWelcome
 
       - name: Pull screenshots from device
         if: always()
