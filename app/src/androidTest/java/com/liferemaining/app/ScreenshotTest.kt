@@ -181,15 +181,15 @@ class ScreenshotTest {
     private fun save(name: String) {
         rule.waitForIdle()
         val bitmap = rule.onRoot().captureToImage().asAndroidBitmap()
-        // 写到应用内部 files/，CI 用 `adb exec-out run-as <debug包> cat` 拉取；
-        // Android 11+ 对 /sdcard/Android/data 的限制会让 adb pull 不稳定。
-        val dir = File(
-            InstrumentationRegistry.getInstrumentation().targetContext.filesDir,
-            "screenshots"
-        )
-        dir.mkdirs()
-        FileOutputStream(File(dir, name)).use { out ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+        // 同时写到目标 App 与测试 APK 的私有目录，CI 用 `run-as` 两个包都尝试拉取。
+        // 不写 /sdcard/Android/data：Android 11+ 的 scoped storage 会让 adb 读不到。
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        listOf(instrumentation.targetContext, instrumentation.context).forEach { ctx ->
+            val dir = File(ctx.filesDir, "screenshots")
+            dir.mkdirs()
+            FileOutputStream(File(dir, name)).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            }
         }
     }
 }
