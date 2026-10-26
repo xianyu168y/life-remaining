@@ -62,7 +62,10 @@ fun PrivacyScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(Spacing.lg))
         SectionHeader(title = "具体做法")
         LifeCard(modifier = Modifier.fillMaxWidth()) {
-            PrivacyItem("需要的权限", "只有通知权限（用于可选的每日提醒）与开机广播（用于恢复提醒）。不申请通讯录、位置、短信、存储等权限。")
+            PrivacyItem(
+                "需要的权限",
+                "应用自身只声明通知权限（可选提醒）与开机广播（恢复提醒）。WorkManager 会合并唤醒锁、网络状态查询与前台服务声明用于可靠调度提醒，它不会把任何内容发送到网络。不申请通讯录、位置、短信、存储等权限。"
+            )
             Divider()
             PrivacyItem("网络", "App 运行时不发起网络请求。除你在设置里点开「开源许可」外链。")
             Divider()
