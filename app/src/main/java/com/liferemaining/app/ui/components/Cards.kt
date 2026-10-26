@@ -2,6 +2,7 @@ package com.liferemaining.app.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -67,8 +68,9 @@ fun LifeCard(
     val shape = RoundedCornerShape(16.dp)
     Column(
         modifier = modifier
-            .clip(shape)
             .background(containerColor, shape)
+            .border(border, shape)
+            .clip(shape)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(contentPadding),
         content = content
