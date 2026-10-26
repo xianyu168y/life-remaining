@@ -33,13 +33,16 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install required SDK packages
+      # GitHub 的 ubuntu runner 自带 Android SDK，这里只补 AGP 8.7 需要的
+      # platform 35 与 build-tools 35，并预先接受许可，避免交互式提示卡住。
+      - name: Ensure SDK platform 35
         run: |
-          sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
-          yes | sdkmanager --licenses > /dev/null || true
+          SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0" > /dev/null
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" --list_installed | sed -n '1,40p'
 
       - name: Unit tests
         run: ./gradlew --no-daemon testDebugUnitTest
@@ -95,19 +98,19 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Cache AVD snapshot
+      - name: Cache AVD
         uses: actions/cache@v4
         with:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-api-34-atd
+          key: avd-api-34-default-x86_64-v1
 
       - name: Run connected tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
-          target: google_apis
+          target: default
           arch: x86_64
           profile: pixel_5
           disable-animations: true
