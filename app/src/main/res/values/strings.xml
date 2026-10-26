@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">余生</string>
+    <string name="notification_channel_name">每日提醒</string>
+    <string name="notification_channel_description">在指定时间给出一句安静的提醒</string>
+    <string name="notification_title">今天也值得认真度过</string>
+    <string name="notification_body">时间正在流动。留一点给自己真正在意的事。</string>
+</resources>
