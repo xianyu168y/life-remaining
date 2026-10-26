@@ -181,10 +181,12 @@ class ScreenshotTest {
     private fun save(name: String) {
         rule.waitForIdle()
         val bitmap = rule.onRoot().captureToImage().asAndroidBitmap()
-        val dir = InstrumentationRegistry.getInstrumentation()
-            .targetContext
-            .getExternalFilesDir("screenshots")
-            ?: File(InstrumentationRegistry.getInstrumentation().targetContext.filesDir, "screenshots")
+        // 写到应用内部 files/，CI 用 `adb exec-out run-as <debug包> cat` 拉取；
+        // Android 11+ 对 /sdcard/Android/data 的限制会让 adb pull 不稳定。
+        val dir = File(
+            InstrumentationRegistry.getInstrumentation().targetContext.filesDir,
+            "screenshots"
+        )
         dir.mkdirs()
         FileOutputStream(File(dir, name)).use { out ->
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)

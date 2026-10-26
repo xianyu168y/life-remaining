@@ -118,7 +118,11 @@ jobs:
           script: |
             ./gradlew --no-daemon connectedDebugAndroidTest
             mkdir -p screenshots
-            adb pull /sdcard/Android/data/com.liferemaining.app.debug/files/screenshots screenshots || true
+            adb shell run-as com.liferemaining.app.debug ls files/screenshots 2>/dev/null | tr -d '\r' > /tmp/shots.txt || true
+            while read -r name; do
+              [ -n "$name" ] || continue
+              adb exec-out run-as com.liferemaining.app.debug cat "files/screenshots/$name" > "screenshots/$name" || true
+            done < /tmp/shots.txt
             ls -la screenshots || true
 
       - name: Upload instrumented test report
