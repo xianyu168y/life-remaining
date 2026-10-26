@@ -17,8 +17,10 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.liferemaining.app.R
+import com.liferemaining.app.data.datastore.ProfileStore
 import com.liferemaining.app.domain.model.ReminderTone
 import com.liferemaining.app.domain.model.UserProfile
+import kotlinx.coroutines.flow.first
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -77,11 +79,6 @@ object ReminderScheduler {
             return false
         }
         createChannel(context)
-        // Worker 拿不到 DataStore 的同步快照，这里把语气写进一个极小的 SharedPreferences。
-        context.getSharedPreferences(ReminderWorker.PREFS, Context.MODE_PRIVATE)
-            .edit()
-            .putString(ReminderWorker.KEY_TONE, profile.reminderTone.name)
-            .apply()
 
         val delay = initialDelayUntil(profile.reminderTime, LocalDateTime.now())
         val request = PeriodicWorkRequestBuilder<ReminderWorker>(24, TimeUnit.HOURS)
@@ -117,9 +114,11 @@ object ReminderScheduler {
         override suspend fun doWork(): Result {
             if (!hasPermission(applicationContext)) return Result.success()
 
-            val prefs = applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            val toneName = prefs.getString(KEY_TONE, ReminderTone.GENTLE.name)
-            val tone = ReminderTone.entries.firstOrNull { it.name == toneName } ?: ReminderTone.GENTLE
+            // 语气每次都从 DataStore 读最新值：用户在设置里改完语气后，
+            // 不需要重新排程，下一条通知就是新语气。
+            val tone = runCatching {
+                ProfileStore(applicationContext).profile.first().reminderTone
+            }.getOrElse { ReminderTone.GENTLE }
             val body = messageFor(tone, LocalDateTime.now().dayOfYear)
 
             val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
@@ -142,8 +141,6 @@ object ReminderScheduler {
         }
 
         companion object {
-            const val PREFS = "reminder_prefs"
-            const val KEY_TONE = "reminder_tone"
             const val NOTIFICATION_ID = 1001
         }
     }
