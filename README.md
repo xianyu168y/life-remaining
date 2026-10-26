@@ -21,11 +21,14 @@
 | 仪器测试 | `./gradlew connectedDebugAndroidTest` |
 
 工作流文件：`.github/workflows/android.yml`
-- `build-and-test`：JDK 17 + Android SDK 35，执行单元测试、`assembleDebug`、lint（仅报告），
+- `build-and-test`：JDK 17 + Android SDK 35，执行 64 个 JVM 单元测试、`assembleDebug`、lint（仅报告），
   上传 `unit-test-report` 与 `app-debug-apk`。
-- `instrumented-test`：API 34 模拟器运行 `connectedDebugAndroidTest`，上传测试报告。
+- `instrumented-test`：API 34 模拟器运行 17 个 `connectedDebugAndroidTest`（含 4 个真机渲染截图用例），
+  上传 `instrumented-test-report` 与 `device-screenshots`。
 
 APK 从对应 GitHub Actions run 的 **Artifacts → app-debug-apk** 下载。
+测试报告在 **Artifacts → unit-test-report / instrumented-test-report**。
+真机渲染截图在 **Artifacts → device-screenshots**（深色首页、浅色首页、苔绿主题、空状态）。
 
 ## 功能
 
@@ -106,7 +109,9 @@ app/src/main/java/com/liferemaining/app/
 - `BackupCodecTest`：往返一致、非法 JSON、错误 app 标识、未来版本、非法寿命、错误日期、空标题；
 - `ReminderScheduleTest` / `FormattingTest` / `PromptSeedTest` / `ProfileDefaultsTest`。
 
-`app/src/androidTest/`
+`app/src/androidTest/`（17 个）
 - `DashboardUiTest`：核心数字可见、页面可滚动、空状态可点击、隐藏数字；
 - `PersistenceTest`：关闭并重开数据库后目标仍在、每日记录按日期唯一、清空生效；
-- `NavigationUiTest`：首次启动进入 Onboarding。
+- `NavigationUiTest`：首次启动进入 Onboarding；四个底部入口真实切换；
+- `LocalizationTest`：深浅主题 × 四种强调色的排版回归；
+- `ScreenshotTest`：在真实设备渲染首页并导出 PNG，作为构建产物核对视觉。
