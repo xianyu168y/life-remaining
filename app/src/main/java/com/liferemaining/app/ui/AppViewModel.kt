@@ -72,6 +72,11 @@ class AppViewModel(private val container: AppContainer) : ViewModel() {
         syncReminder()
     }
 
+    fun resyncReminder() = viewModelScope.launch {
+        val updated = container.profileStore.profile.first()
+        container.scheduleReminder(updated)
+    }
+
     private suspend fun syncReminder() {
         val updated = container.profileStore.profile.first()
         container.scheduleReminder(updated)

@@ -46,6 +46,8 @@ import java.time.LocalTime
 @Composable
 fun OnboardingScreen(
     vm: OnboardingViewModel,
+    hasNotificationPermission: () -> Boolean,
+    requestNotificationPermission: () -> Unit,
     onFinished: () -> Unit
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -98,7 +100,12 @@ fun OnboardingScreen(
                 reminderTone = state.reminderTone,
                 onThemeChange = vm::setTheme,
                 onShowExactChange = vm::setShowExactDays,
-                onReminderChange = vm::setReminderEnabled,
+                onReminderChange = { enabled ->
+                    if (enabled && !hasNotificationPermission()) {
+                        requestNotificationPermission()
+                    }
+                    vm.setReminderEnabled(enabled)
+                },
                 onPickTime = { showTimePicker = true },
                 onToneChange = vm::setReminderTone
             )

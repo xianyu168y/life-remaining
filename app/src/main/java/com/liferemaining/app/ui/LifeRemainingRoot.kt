@@ -83,6 +83,14 @@ fun LifeRemainingRoot(container: AppContainer) {
             if (profile.onboardingCompleted) Routes.DASHBOARD else Routes.ONBOARDING
         }
 
+        val notificationPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            if (granted) {
+                appViewModel.resyncReminder()
+            }
+        }
+
         NavHost(
             navController = navController,
             startDestination = startDestination
@@ -94,6 +102,12 @@ fun LifeRemainingRoot(container: AppContainer) {
                 SecondaryPage {
                     OnboardingScreen(
                         vm = vm,
+                        hasNotificationPermission = { container.hasNotificationPermission() },
+                        requestNotificationPermission = {
+                            notificationPermissionLauncher.launch(
+                                android.Manifest.permission.POST_NOTIFICATIONS
+                            )
+                        },
                         onFinished = {
                             appViewModel.refreshToday()
                             navController.navigate(Routes.DASHBOARD) {

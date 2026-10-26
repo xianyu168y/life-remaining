@@ -131,7 +131,7 @@ fun DashboardContent(
                 onOpenSettings = onOpenSettings
             )
 
-            if (state.profile.countdownConfigured) {
+            if (state.profile.hasBirthDate) {
                 ProgressSection(state = state, onOpenPeriod = onOpenPeriod)
             }
 
@@ -522,8 +522,8 @@ private fun TimeStatsSection(state: DashboardUiState, onOpenPeriod: (String) -> 
             StatTile(
                 label = "本年度",
                 value = stats.year.remaining.toString(),
-                unit = "天",
-                supporting = "已过去 ${stats.year.percent.roundToInt()}%",
+                unit = "天剩余",
+                supporting = "今年共 ${stats.year.total} 天，已过去 ${stats.year.elapsed} 天",
                 modifier = Modifier.weight(1f),
                 onClick = { onOpenPeriod("year") }
             )
@@ -533,16 +533,16 @@ private fun TimeStatsSection(state: DashboardUiState, onOpenPeriod: (String) -> 
             StatTile(
                 label = "本月",
                 value = stats.month.remaining.toString(),
-                unit = "天",
-                supporting = "已过去 ${stats.month.elapsed}/${stats.month.total} 天",
+                unit = "天剩余",
+                supporting = "本月共 ${stats.month.total} 天，已过去 ${stats.month.elapsed} 天",
                 modifier = Modifier.weight(1f),
                 onClick = { onOpenPeriod("month") }
             )
             StatTile(
                 label = "本周",
                 value = stats.week.remaining.toString(),
-                unit = "天",
-                supporting = "今天是第 ${stats.week.elapsed}/7 天",
+                unit = "天剩余",
+                supporting = "今天是本周第 ${stats.week.elapsed} 天",
                 modifier = Modifier.weight(1f),
                 onClick = { onOpenPeriod("week") }
             )
