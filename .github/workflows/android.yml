@@ -117,6 +117,13 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: ./gradlew --no-daemon connectedDebugAndroidTest
 
+      - name: Pull screenshots from device
+        if: always()
+        run: |
+          mkdir -p screenshots
+          adb pull /sdcard/Android/data/com.liferemaining.app.debug/files/screenshots screenshots || true
+          ls -la screenshots || true
+
       - name: Upload instrumented test report
         if: always()
         uses: actions/upload-artifact@v4
@@ -125,3 +132,12 @@ jobs:
           path: app/build/reports/androidTests/connected
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: device-screenshots
+          path: screenshots
+          if-no-files-found: warn
+          retention-days: 30
