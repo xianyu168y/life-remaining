@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +26,8 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -147,6 +150,8 @@ fun SettingsScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        // 已经在外层 MainScaffold 的 padding 里，避免重复叠加状态栏内边距。
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
         LazyColumn(
@@ -179,19 +184,31 @@ fun SettingsScreen(
             item {
                 SectionHeader(title = "外观")
                 GroupCard {
-                    ListRow(
-                        title = "主题",
-                        subtitle = profile.themeMode.label,
-                        onClick = {
-                            val next = when (profile.themeMode) {
-                                ThemeMode.SYSTEM -> ThemeMode.LIGHT
-                                ThemeMode.LIGHT -> ThemeMode.DARK
-                                ThemeMode.DARK -> ThemeMode.SYSTEM
+                    Column(modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.md)) {
+                        Text(
+                            text = "主题",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.height(Spacing.sm))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+                        ) {
+                            ThemeMode.entries.forEach { mode ->
+                                FilterChip(
+                                    selected = profile.themeMode == mode,
+                                    onClick = { onThemeChange(mode) },
+                                    label = { Text(mode.label, style = MaterialTheme.typography.labelMedium) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        selectedLabelColor = MaterialTheme.colorScheme.primary
+                                    )
+                                )
                             }
-                            onThemeChange(next)
-                        },
-                        trailing = { Text("切换", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) }
-                    )
+                        }
+                    }
                     RowDivider()
                     Row(
                         modifier = Modifier

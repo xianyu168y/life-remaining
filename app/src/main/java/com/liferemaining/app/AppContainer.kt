@@ -15,7 +15,7 @@ import com.liferemaining.app.util.TodayProvider
 /** 手工依赖容器。App 规模不需要 DI 框架，构造关系一眼可见。 */
 class AppContainer(private val context: Context) {
 
-    private val database: AppDatabase = AppDatabase.get(context)
+    val database: AppDatabase = AppDatabase.get(context)
 
     val todayProvider: TodayProvider = TodayProvider()
 
@@ -30,6 +30,7 @@ class AppContainer(private val context: Context) {
     val yearNoteRepository: YearNoteRepository = YearNoteRepository(database.yearNoteDao())
 
     val backupService: BackupService = BackupService(
+        database = database,
         profileStore = profileStore,
         goalRepository = goalRepository,
         milestoneRepository = milestoneRepository,

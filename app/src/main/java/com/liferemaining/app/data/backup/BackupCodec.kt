@@ -50,6 +50,8 @@ object BackupCodec {
 
     fun encode(snapshot: BackupSnapshot, exportedAt: LocalDateTime = LocalDateTime.now()): String {
         val file = BackupFile(
+            version = BackupFile.CURRENT_VERSION,
+            app = BackupFile.APP_ID,
             exportedAt = exportedAt.format(iso),
             profile = snapshot.profile?.let { profile ->
                 BackupProfile(

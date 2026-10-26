@@ -2,6 +2,7 @@ package com.liferemaining.app.ui.goals
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -52,6 +53,8 @@ fun GoalsScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        // 已经在外层 MainScaffold 的 padding 里，避免重复叠加状态栏内边距。
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onCreate,

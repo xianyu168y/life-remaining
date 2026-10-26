@@ -9,8 +9,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class BackupFile(
-    val version: Int = CURRENT_VERSION,
-    @SerialName("app") val app: String = APP_ID,
+    val version: Int,
+    @SerialName("app") val app: String,
     val exportedAt: String,
     val profile: BackupProfile? = null,
     val goals: List<BackupGoal> = emptyList(),

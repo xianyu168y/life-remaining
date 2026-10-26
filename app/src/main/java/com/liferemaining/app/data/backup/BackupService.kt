@@ -1,5 +1,7 @@
 package com.liferemaining.app.data.backup
 
+import androidx.room.withTransaction
+import com.liferemaining.app.data.database.AppDatabase
 import com.liferemaining.app.data.datastore.ProfileStore
 import com.liferemaining.app.data.repository.GoalRepository
 import com.liferemaining.app.data.repository.MilestoneRepository
@@ -12,6 +14,7 @@ import kotlinx.coroutines.flow.first
  * 导入时先完整解码校验，成功后才写入，避免半途失败留下混合数据。
  */
 class BackupService(
+    private val database: AppDatabase,
     private val profileStore: ProfileStore,
     private val goalRepository: GoalRepository,
     private val milestoneRepository: MilestoneRepository,
@@ -35,11 +38,18 @@ class BackupService(
             is DecodeResult.Failure -> ImportResult.Failure(decoded.reason)
             is DecodeResult.Success -> {
                 val snapshot = decoded.snapshot
+                try {
+                    // 四张表一个事务：任一失败整体回滚，不会出现「导入一半」。
+                    database.withTransaction {
+                        goalRepository.replaceAll(snapshot.goals)
+                        milestoneRepository.replaceAll(snapshot.milestones)
+                        reflectionRepository.replaceAll(snapshot.reflections)
+                        yearNoteRepository.replaceAll(snapshot.yearNotes)
+                    }
+                } catch (e: Exception) {
+                    return ImportResult.Failure("写入数据库失败：${e.message ?: "未知错误"}")
+                }
                 snapshot.profile?.let { profileStore.overwrite(it) }
-                goalRepository.replaceAll(snapshot.goals)
-                milestoneRepository.replaceAll(snapshot.milestones)
-                reflectionRepository.replaceAll(snapshot.reflections)
-                yearNoteRepository.replaceAll(snapshot.yearNotes)
                 ImportResult.Success(
                     goals = snapshot.goals.size,
                     milestones = snapshot.milestones.size,
