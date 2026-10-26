@@ -184,11 +184,20 @@ class ScreenshotTest {
         // 同时写到目标 App 与测试 APK 的私有目录，CI 用 `run-as` 两个包都尝试拉取。
         // 不写 /sdcard/Android/data：Android 11+ 的 scoped storage 会让 adb 读不到。
         val instrumentation = InstrumentationRegistry.getInstrumentation()
-        listOf(instrumentation.targetContext, instrumentation.context).forEach { ctx ->
-            val dir = File(ctx.filesDir, "screenshots")
-            dir.mkdirs()
-            FileOutputStream(File(dir, name)).use { out ->
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+        val candidates = listOf(instrumentation.targetContext, instrumentation.context)
+        for (ctx in candidates) {
+            runCatching {
+                val dir = File(ctx.filesDir, "screenshots")
+                if (!dir.exists() && !dir.mkdirs()) {
+                    android.util.Log.w("ScreenshotTest", "mkdirs failed: $dir")
+                    continue
+                }
+                FileOutputStream(File(dir, name)).use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+                }
+                android.util.Log.i("ScreenshotTest", "saved $dir/$name")
+            }.onFailure {
+                android.util.Log.w("ScreenshotTest", "save failed at ${ctx.packageName}", it)
             }
         }
     }
